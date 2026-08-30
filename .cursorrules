@@ -1,0 +1,27 @@
+# DSA Revision Agent — Cursor Rules
+
+## Project Context
+This is an AI-powered DSA revision agent built as a capstone project
+for the Agentic AI Engineering & Systems Automation Fellowship.
+
+## Architecture
+- Backend: Python + FastAPI
+- AI Layer: Claude API (Anthropic)
+- Database: Supabase
+- Frontend: Plain HTML/CSS/JS
+- Deployment: Railway
+
+## Coding Rules
+- Never hardcode API keys or secrets. Always use environment variables.
+- All AI calls must use the DSA Analyzer persona defined in prompts/dsa_analyzer.md
+- Every function must have a docstring explaining what it does.
+- Validate all incoming webhook payloads before processing.
+- Return structured JSON from all AI calls — never freeform text.
+- Log errors properly — never silently swallow exceptions.
+
+## File Structure
+- backend/ — FastAPI server, webhook handler, AI layer, database layer
+- frontend/ — Dashboard (HTML/CSS/JS)
+- prompts/ — All system prompts and persona definitions
+- .env.example — Documents all required environment variables
+- README.md — Architecture, setup, usage
