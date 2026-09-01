@@ -1,8 +1,10 @@
 import hmac
 import hashlib
 import os
+import httpx
 from fastapi import FastAPI, Request, HTTPException
 from dotenv import load_dotenv
+from analyzer import analyze_solution
 
 load_dotenv()
 
@@ -15,7 +17,6 @@ def verify_github_signature(payload: bytes, signature: str) -> bool:
     """
     GitHub signs every webhook request with your secret.
     This checks the request actually came from GitHub.
-    Without this, anyone could send fake push events to your server.
     """
     if not GITHUB_WEBHOOK_SECRET:
         raise HTTPException(status_code=500, detail="Webhook secret not configured")
@@ -29,11 +30,23 @@ def verify_github_signature(payload: bytes, signature: str) -> bool:
     return hmac.compare_digest(expected, signature)
 
 
+async def fetch_file_content(repo: str, file_path: str) -> str:
+    """
+    Fetch the raw file content from GitHub using their API.
+    """
+    url = f"https://raw.githubusercontent.com/{repo}/main/{file_path}"
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        if response.status_code == 200:
+            return response.text
+        return ""
+
+
 @app.post("/webhook")
 async def github_webhook(request: Request):
     """
     Receives push events from GitHub.
-    GitHub calls this every time you push to dsa-solutions.
+    Fetches the file, sends it to AI for analysis, prints result.
     """
     payload = await request.body()
 
@@ -43,7 +56,9 @@ async def github_webhook(request: Request):
 
     data = await request.json()
 
+    repo = data.get("repository", {}).get("full_name", "")
     commits = data.get("commits", [])
+
     for commit in commits:
         added_files = commit.get("added", [])
         modified_files = commit.get("modified", [])
@@ -53,6 +68,10 @@ async def github_webhook(request: Request):
 
         for file_path in c_files:
             print(f"New solution detected: {file_path}")
+            code = await fetch_file_content(repo, file_path)
+            if code:
+                result = analyze_solution(file_path, code)
+                print(f"Result: {result}")
 
     return {"status": "received"}
 
