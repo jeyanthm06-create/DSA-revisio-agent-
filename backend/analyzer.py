@@ -1,12 +1,12 @@
 import os
 import json
 import hashlib
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 # Cache to avoid calling AI for identical solutions
 _cache = {}
@@ -35,7 +35,7 @@ Role:
 You are an expert DSA mentor and code analyst specializing in competitive programming patterns.
 
 Context:
-A student submitted a C solution to a LeetCode problem. 
+A student submitted a C solution to a LeetCode problem.
 File path: {file_path}
 
 Task:
@@ -67,11 +67,12 @@ Code to analyze:
 {code}
 """
 
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    response = model.generate_content(prompt)
-    result_text = response.text.strip()
+    response = client.models.generate_content(
+        model="gemini-3.6-flash",
+        contents=prompt
+    )
 
-    # Parse JSON response
+    result_text = response.text.strip()
     result = json.loads(result_text)
 
     # Store in cache
