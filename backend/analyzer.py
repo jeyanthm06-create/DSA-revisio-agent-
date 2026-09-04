@@ -3,10 +3,16 @@ import json
 import hashlib
 from google import genai
 from dotenv import load_dotenv
+from supabase import create_client
 
 load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+supabase = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_SECRET_KEY")
+)
 
 # Cache to avoid calling AI for identical solutions
 _cache = {}
@@ -78,5 +84,22 @@ Code to analyze:
     # Store in cache
     _cache[code_hash] = result
     print(f"Analysis complete for {file_path}: {result['pattern']}")
+
+    # Save to Supabase
+    try:
+        supabase.table("solutions").insert({
+            "file_path": file_path,
+            "repo": "",
+            "code_hash": code_hash,
+            "topic": result.get("topic"),
+            "pattern": result.get("pattern"),
+            "time_complexity": result.get("time_complexity"),
+            "space_complexity": result.get("space_complexity"),
+            "approach_summary": result.get("approach_summary"),
+            "next_revision_days": result.get("next_revision_days"),
+        }).execute()
+        print(f"Saved to Supabase: {file_path}")
+    except Exception as e:
+        print(f"Supabase insert failed: {e}")
 
     return result
