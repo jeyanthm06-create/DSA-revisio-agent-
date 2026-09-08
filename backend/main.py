@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import pathlib
