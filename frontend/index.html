@@ -154,9 +154,7 @@
     </div>
 
     <script>
-        const BASE = window.location.origin.includes('localhost')
-            ? 'http://localhost:8000'
-            : 'https://r4004d9c-8000.inc1.devtunnels.ms';
+        const BASE = '';
 
         async function loadDue() {
             const res = await fetch(`${BASE}/due-today`);
